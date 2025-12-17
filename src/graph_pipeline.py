@@ -13,14 +13,18 @@ draw_graph() ok
 
 import matplotlib.pyplot as plt
 import networkx as nx
+from pathlib import Path
 
-from json_helper_load import load_nodes, load_edges
-from normalize_progress import normalize_progress
+from src.json_helper_load import load_nodes, load_edges
+from src.normalize_progress import normalize_progress
+
+BASE_DIR = Path(__file__).parent
+DEFAULT_DATA_PATH = BASE_DIR / "data.json"
 
 
-def build_graph(G):
-    nodes = load_nodes()
-    edges = load_edges()
+def build_graph(G, path: Path = DEFAULT_DATA_PATH):
+    nodes = load_nodes(path)
+    edges = load_edges(path)
 
     # add nodes
     progress_percents = []
@@ -29,11 +33,15 @@ def build_graph(G):
             progress_percent = node["content"]["progress_percentage"]
             progress_percents.append(normalize_progress(progress_percent))
             G.add_node(node["id"], progress_percent=progress_percent)
+        else:
+            print(node)
 
     # add edges
     for edge in edges:
         if validate_edge(edge_data=edge, nodes=nodes):
             G.add_edge(edge["from"], edge["to"])
+        else:
+            print(edge)
 
     return progress_percents
 
