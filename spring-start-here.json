@@ -41,7 +41,8 @@
                     "Abundant existing customizations make a framework impractical",
                     "You won’t benefit from switching to a framework"
                 ],
-                "raw_text": ""
+                "raw_text": "",
+                "keywords": []
             }
         },
         {
@@ -58,7 +59,8 @@
                     "Using stereotype annotations to add beans to the Spring context",
                     "Programmatically adding beans to the Spring context"
                 ],
-                "raw_text": ""
+                "raw_text": "",
+                "keywords": []
             }
         },
         {
@@ -80,7 +82,8 @@
                     "Using @Autowired to inject the values through the constructor",
                     "Using dependency injection through the setter"
                 ],
-                "raw_text": ""
+                "raw_text": "",
+                "keywords": []
             }
         },
         {
@@ -101,7 +104,8 @@
                     "Choosing what to auto-wire from multiple implementations of an abstraction",
                     "annotations"
                 ],
-                "raw_text": ""
+                "raw_text": "",
+                "keywords": []
             }
         },
         {
@@ -120,7 +124,8 @@
                     "How prototype beans work",
                     "Prototype beans in real-world scenarios"
                 ],
-                "raw_text": ""
+                "raw_text": "",
+                "keywords": []
             }
         },
         {
@@ -139,7 +144,8 @@
                     "Intercepting annotated methods",
                     "Other advice annotations you can use"
                 ],
-                "raw_text": ""
+                "raw_text": "",
+                "keywords": []
             }
         },
         {
@@ -160,7 +166,8 @@
                     "Using dependency starters to simplify the dependency management",
                     "Using autoconfiguration by convention based on dependencies"
                 ],
-                "raw_text": ""
+                "raw_text": "",
+                "keywords": []
             }
         },
         {
@@ -177,7 +184,8 @@
                     "Using request parameters to send data from client to server",
                     "Using path variables to send data from client to server"
                 ],
-                "raw_text": ""
+                "raw_text": "",
+                "keywords": []
             }
         },
         {
@@ -191,7 +199,8 @@
             ],
             "signals": {
                 "bullets": [],
-                "raw_text": ""
+                "raw_text": "",
+                "keywords": []
             }
         },
         {
@@ -210,7 +219,8 @@
                     "Setting the response status and headers",
                     "Managing exceptions at the endpoint level"
                 ],
-                "raw_text": ""
+                "raw_text": "",
+                "keywords": []
             }
         },
         {
@@ -224,7 +234,8 @@
             ],
             "signals": {
                 "bullets": [],
-                "raw_text": ""
+                "raw_text": "",
+                "keywords": []
             }
         },
         {
@@ -241,7 +252,8 @@
                     "Defining the data source in the application properties file",
                     "Using a custom DataSource bean"
                 ],
-                "raw_text": ""
+                "raw_text": "",
+                "keywords": []
             }
         },
         {
@@ -255,7 +267,8 @@
             ],
             "signals": {
                 "bullets": [],
-                "raw_text": ""
+                "raw_text": "",
+                "keywords": []
             }
         },
         {
@@ -269,7 +282,8 @@
             ],
             "signals": {
                 "bullets": [],
-                "raw_text": ""
+                "raw_text": "",
+                "keywords": []
             }
         },
         {
@@ -285,7 +299,8 @@
                     "Implementing unit tests",
                     "Implementing integration tests"
                 ],
-                "raw_text": ""
+                "raw_text": "",
+                "keywords": []
             }
         }
     ]

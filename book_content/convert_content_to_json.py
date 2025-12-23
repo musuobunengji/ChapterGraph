@@ -23,7 +23,9 @@ SECTION_RULE = {
 }
 
 BULET_RULE = {
-    "no_bullet_title": lambda tokens: not tokens[0].isdigit(),  # Using ....
+    "no_bullet_title": lambda tokens: not tokens[0]
+    .replace(".", "")
+    .isdigit(),  # Using ....
     "is_single": lambda tokens: tokens[0].count(".") == 2,  # 12.2.3
 }
 
@@ -62,6 +64,7 @@ def detect_role(tokens, rule=RULE):
     return ROLE_BULLET
 
 
+# def add_keywords()
 def create_chapter(tokens, book_name, chapters):
     chapter_type = detect_chapter_type(tokens)
     if chapter_type == CHAPTER_INT:
@@ -114,7 +117,8 @@ def create_bullet(chapter, tokens, current_bullet):
     elif bullet_type == BULLET_SINGLE:
         for token in tokens:
             current_bullet += token + " "
-        chapter["signals"]["bullets"].append(current_bullet)
+        clean_bullet = " ".join(current_bullet.split()[1:])
+        chapter["signals"]["bullets"].append(clean_bullet)
         current_bullet = ""
 
     return current_bullet
@@ -172,13 +176,19 @@ def normalize_parser_meta(parser_meta):
     }
 
 
-def load_data_to_json(book_name, chapters, parser_meta):
+def load_data(book_name, chapters, parser_meta):
     data = {
         "book_id": book_name,
         "parser_meta": normalize_parser_meta(parser_meta),
         "chapters": chapters,
     }
-    with open(f"{book_name}.json", "w", encoding="utf-8") as f:
+    # with open(f"{book_name}.json", "w", encoding="utf-8") as f:
+    #     json.dump(data, fp=f, indent=4, ensure_ascii=False)
+    return data
+
+
+def dump_data_to_json(data, path):
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(data, fp=f, indent=4, ensure_ascii=False)
 
 
@@ -186,20 +196,21 @@ def convert_content_to_json(book_name, content_path):
     chapters, parser_meta = load_content_to_data(
         content_path=content_path, book_name=book_name
     )
-    load_data_to_json(book_name=book_name, chapters=chapters, parser_meta=parser_meta)
+    data = load_data(book_name=book_name, chapters=chapters, parser_meta=parser_meta)
+    return data
 
 
 # -------test---------
-convert_content_to_json(
-    book_name="spring-in-action",
-    content_path=r"book_content/spring_in_action_content.txt",
-)
+# convert_content_to_json(
+#     book_name="spring-in-action",
+#     content_path=r"book_content/spring_in_action_content.txt",
+# )
 
-convert_content_to_json(
-    book_name="core-java", content_path=r"book_content/core_java_content.txt"
-)
+# convert_content_to_json(
+#     book_name="core-java", content_path=r"book_content/core_java_content.txt"
+# )
 
-convert_content_to_json(
-    book_name="spring-start-here",
-    content_path=r"book_content/spring_start_here_content.txt",
-)
+# convert_content_to_json(
+#     book_name="spring-start-here",
+#     content_path=r"book_content/spring_start_here_content.txt",
+# )
