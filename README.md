@@ -1,4 +1,4 @@
-# Learning-progress-visualization-3D-page
-visualize your learn progress using Python and data visualization
+# ChapterGraph
 
+A chapter-level knowledge graph construction pipeline
 Current status:WIP
