@@ -19,4 +19,4 @@ class Edge(BaseModel):
 
 class EdgeResponse(BaseModel):
     edge_count: int
-    edges: List[Dict[str, Any]]
+    edges: List[Edge]

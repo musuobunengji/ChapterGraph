@@ -54,6 +54,36 @@ def load_all_enriched_data(config_path):
 # print(load_all_enriched_data("book_content/books.yaml"))
 
 
+def load_all_enriched_data_from_configs(book_configs: list[dict]):
+    """
+    "book_configs": [
+        {
+            "book_name": "spring-in-action",
+            "content_path": "book_content/spring_in_action_content.txt"
+        },
+        {
+            "book_name": "spring-start-here",
+            "content_path": "book_content/spring_start_here_content.txt"
+        },
+        {
+            "book_name": "core-java",
+            "content_path": "book_content/core_java_content.txt"
+        }
+    ]
+    """
+    enriched_books = []
+
+    for cfg in book_configs:
+        book_name = cfg["book_name"]
+        content_path = cfg["content_path"]
+
+    base_data = convert_content_to_json(book_name=book_name, content_path=content_path)
+    enriched_data = enrich_signals_with_keywords(base_data)
+    enriched_books.append(enriched_data)
+
+    return enriched_books
+
+
 def build_keyword_index(enriched_books):
     index = {}  # keyword -> set(chapter_id)
     for book in enriched_books:
@@ -85,12 +115,14 @@ def generate_edges(enriched_books, keyword_index):
             candidates.discard(src_id)
 
             for tgt_id in candidates:
-                edges.append({"from": src_id, "to": tgt_id, "type": "keyword_overlap"})
+                edges.append(
+                    {"from_id": src_id, "to_id": tgt_id, "type": "keyword_overlap"}
+                )
 
     return edges
 
 
-enriched_books = load_all_enriched_data("book_content/books.yaml")
-index = build_keyword_index(enriched_books)
-edges = generate_edges(enriched_books, index)
-print(edges)
+# enriched_books = load_all_enriched_data("book_content/books.yaml")
+# index = build_keyword_index(enriched_books)
+# edges = generate_edges(enriched_books, index)
+# print(edges)
