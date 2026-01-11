@@ -1,4 +1,5 @@
 import json
+import os
 
 ROLE_CHAPTER = "chapter"
 ROLE_SECTION = "section"
@@ -186,9 +187,12 @@ def load_data(book_name, chapters, parser_meta):
     return data
 
 
-def dump_data_to_json(data, path):
+def dump_data_to_json(data, output_dir="output"):
+    book_id = data["book_id"]
+    path = os.path.join(output_dir, f"{book_id}_enriched.json")
+
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, fp=f, indent=4, ensure_ascii=False)
+        json.dump(data, f, indent=4, ensure_ascii=False)
 
 
 def convert_content_to_json(book_name, content_path):
