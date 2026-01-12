@@ -21,6 +21,11 @@ def collect_chapter_texts(enriched_books):
     return texts
 
 
+def get_book_id(chapter_id: str) -> str:
+    """spring-in-action::ch1->{book_id}::{chapter_id}"""
+    return chapter_id.split("::")[0]
+
+
 # =====================================================
 # 2️⃣ TF-IDF Index
 # =====================================================
@@ -150,7 +155,7 @@ def generate_edges(
     for book in enriched_books:
         for chapter in book["chapters"]:
             src_id = chapter["id"]
-
+            src_book = get_book_id(src_id)
             candidates = generate_candidates(
                 src_id,
                 chapter_top_tokens,
@@ -159,6 +164,11 @@ def generate_edges(
             )
 
             for tgt_id in candidates:
+                tgt_book = get_book_id(tgt_id)
+
+                if src_book == tgt_book:
+                    continue
+
                 score = tfidf_similarity(src_id, tgt_id, tfidf_index)
 
                 if score < min_tfidf_score:

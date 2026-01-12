@@ -1,7 +1,7 @@
 from feature_achievement.enrichment import load_all_enriched_data
 
 # from feature_achievement.index import build_keyphrases_index
-from feature_achievement.edge_generation import (
+from feature_achievement.edge_generation2 import (
     generate_edges,
     collect_chapter_texts,
     build_tfidf_index,
