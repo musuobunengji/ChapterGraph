@@ -33,6 +33,7 @@ class RetrievalPipeline:
                     "from": src_id,
                     "to": tgt_id,
                     "score": score,
+                    "type":self.similarity_scorer.name,
                 }
             )
 

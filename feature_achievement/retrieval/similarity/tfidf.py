@@ -14,3 +14,7 @@ class TfidfSimilarityScorer(SimilarityScorer):
         return float(
             cosine_similarity(self.tfidf_matrix[i], self.tfidf_matrix[j])[0][0]
         )
+
+    @property
+    def name(self) -> str:
+        return "tfidf"
