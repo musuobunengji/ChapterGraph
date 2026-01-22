@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>ChapterGraph</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #f8fafc;
+            --text: #0f172a;
+            --panel: rgba(255, 255, 255, 0.9);
+            --panel-border: rgba(15, 23, 42, 0.12);
+            --edge: rgba(100, 116, 139, 0.22);
+        }
+
+        :root[data-theme="dark"] {
+            color-scheme: dark;
+            --bg: #0f0f0f;
+            --text: #e5e7eb;
+            --panel: rgba(15, 23, 42, 0.85);
+            --panel-border: rgba(148, 163, 184, 0.2);
+            --edge: rgba(148, 163, 184, 0.25);
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+        }
+
+        canvas {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+
+        #topbar {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        #tooltip {
+            position: fixed;
+            z-index: 20;
+            pointer-events: none;
+            background: var(--panel);
+            color: var(--text);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+            max-width: 260px;
+            font-size: 12px;
+            line-height: 1.4;
+            opacity: 0;
+            transform: translate(8px, 8px);
+            transition: opacity 120ms ease;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="topbar">
+        <select id="runSelect"></select>
+        <button id="themeToggle" type="button">Theme: Light</button>
+    </div>
+
+    <canvas id="graph"></canvas>
+    <div id="tooltip"></div>
+    <script src="graph.js"></script>
+</body>
+
+</html>

@@ -152,7 +152,12 @@ def get_graph(
 
     for chapter in chapters:
         frontend["nodes"].append(
-            {"id": chapter.id, "type": "chapter", "book_id": chapter.book_id}
+            {
+                "id": chapter.id,
+                "type": "chapter",
+                "book_id": chapter.book_id,
+                "title": chapter.title,
+            }
         )
 
     for edge in edges:
