@@ -4,9 +4,8 @@ import {
     rebuildGraph,
     draw,
     findNodeAtPosition,
-} from "./graph-core/buildView.js";
-import { ActionTypes } from "./graph-core/types.js";
-import { reducer as coreReducer } from "./graph-core/reducer.js";
+} from "./graph-core-dist/buildView.js";
+import { reducer as coreReducer } from "./graph-core-dist/reducer.js";
 
 const API = "http://127.0.0.1:8000";
 
@@ -57,10 +56,9 @@ function App() {
     useEffect(() => {
         const handleResize = () => {
             dispatch({
-                type: ActionTypes.RESIZE,
-                payload: {
-                    dimensions: { width: window.innerWidth, height: window.innerHeight },
-                },
+                type: "RESIZE",
+                width: window.innerWidth,
+                height: window.innerHeight,
             });
         };
         handleResize();
@@ -85,13 +83,13 @@ function App() {
 
     useEffect(() => {
         if (!selectedRun) return;
-        dispatch({ type: ActionTypes.LOAD_GRAPH_START });
+        dispatch({ type: "LOAD_GRAPH_START" });
         fetch(`${API}/graph?run_id=${selectedRun}`)
             .then((res) => res.json())
             .then((data) => {
                 dispatch({
-                    type: ActionTypes.LOAD_GRAPH_SUCCESS,
-                    payload: { graph: data },
+                    type: "LOAD_GRAPH_SUCCESS",
+                    graph: data,
                 });
             })
             .catch(console.error);
@@ -123,8 +121,8 @@ function App() {
             .filter((event) => event.type !== "dblclick")
             .on("zoom", (event) => {
                 dispatch({
-                    type: ActionTypes.SET_TRANSFORM,
-                    payload: { transform: event.transform },
+                    type: "SET_TRANSFORM",
+                    transform: event.transform,
                 });
             });
 
@@ -135,7 +133,7 @@ function App() {
             const x = (event.clientX - rect.left - stateRef.current.transform.x) / stateRef.current.transform.k;
             const y = (event.clientY - rect.top - stateRef.current.transform.y) / stateRef.current.transform.k;
             const hit = findNodeAtPosition(stateRef.current, x, y);
-            dispatch({ type: ActionTypes.SET_HOVERED_NODE, payload: { node: hit } });
+            dispatch({ type: "SET_HOVERED_NODE", node: hit });
             canvas.style.cursor = hit ? "pointer" : "default";
 
             if (!tooltip) return;
@@ -159,7 +157,7 @@ function App() {
         };
 
         const handleLeave = () => {
-            dispatch({ type: ActionTypes.SET_HOVERED_NODE, payload: { node: null } });
+            dispatch({ type: "SET_HOVERED_NODE", node: null });
             canvas.style.cursor = "default";
             if (tooltip) {
                 tooltip.style.opacity = "0";
@@ -173,8 +171,8 @@ function App() {
             const hit = findNodeAtPosition(stateRef.current, x, y);
             if (!hit) return;
             dispatch({
-                type: ActionTypes.TOGGLE_BOOK,
-                payload: { bookId: hit.bookId },
+                type: "TOGGLE_BOOK",
+                bookId: hit.bookId,
             });
         };
 
@@ -199,8 +197,8 @@ function App() {
 
     const onThemeToggle = () => {
         dispatch({
-            type: ActionTypes.SET_THEME,
-            payload: { theme: state.theme === "dark" ? "light" : "dark" },
+            type: "SET_THEME",
+            theme: state.theme === "dark" ? "light" : "dark",
         });
     };
 

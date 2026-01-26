@@ -1,15 +1,19 @@
+import type { CoreState, ViewLink, ViewNode } from "./types";
+
+declare const d3: any;
+
 const BOOK_COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6"];
 
-function getBookRadius(node) {
+function getBookRadius(node: ViewNode) {
     const count = node.chapterCount ?? 1;
     return 12 + Math.sqrt(Math.max(count, 1)) * 2.2;
 }
 
-function getNodeRadius(node) {
+function getNodeRadius(node: ViewNode) {
     return node.type === "book" ? getBookRadius(node) : 5.5;
 }
 
-function findNodeAtPosition(state, x, y) {
+export function findNodeAtPosition(state: CoreState, x: number, y: number) {
     for (let i = state.nodes.length - 1; i >= 0; i -= 1) {
         const n = state.nodes[i];
         if (n.x == null || n.y == null) continue;
@@ -21,8 +25,11 @@ function findNodeAtPosition(state, x, y) {
     return null;
 }
 
-function buildView(currentState, previousNodes) {
-    if (!currentState.graph) {
+export function buildView(
+    state: CoreState,
+    previousNodes: ViewNode[],
+): { nodes: ViewNode[]; links: ViewLink[] } {
+    if (!state.graph) {
         return { nodes: [], links: [] };
     }
 
@@ -30,10 +37,10 @@ function buildView(currentState, previousNodes) {
     // - every link connects two visible nodes (checked via visibleChapterIds)
     // - book nodes never appear when expanded (expandedBooks gate)
     // - node.id is globally unique (book-... vs chapter-...)
-    const books = currentState.graph.nodes.filter(n => n.type === "book");
-    const chapters = currentState.graph.nodes.filter(n => n.type === "chapter");
+    const books = state.graph.nodes.filter(n => n.type === "book");
+    const chapters = state.graph.nodes.filter(n => n.type === "chapter");
 
-    const chapterCountMap = new Map();
+    const chapterCountMap = new Map<string, number>();
     chapters.forEach(c => {
         chapterCountMap.set(
             c.book_id,
@@ -41,19 +48,22 @@ function buildView(currentState, previousNodes) {
         );
     });
 
-    const bookColorMap = new Map();
+    const bookColorMap = new Map<string, string>();
     books.forEach((b, i) => {
         bookColorMap.set(b.id, BOOK_COLORS[i % BOOK_COLORS.length]);
     });
 
-    const prevPositions = new Map();
+    const prevPositions = new Map<
+        string,
+        { x?: number | null; y?: number | null; fx?: number | null; fy?: number | null }
+    >();
     previousNodes.forEach(n => {
         if (n.x != null && n.y != null) {
             prevPositions.set(n.id, { x: n.x, y: n.y, fx: n.fx, fy: n.fy });
         }
     });
 
-    const chapterCentroids = new Map();
+    const chapterCentroids = new Map<string, { x: number; y: number; count: number }>();
     previousNodes.forEach(n => {
         if (n.type !== "chapter" || n.x == null || n.y == null) return;
         const current = chapterCentroids.get(n.bookId) ?? { x: 0, y: 0, count: 0 };
@@ -64,21 +74,23 @@ function buildView(currentState, previousNodes) {
         });
     });
 
-    const nextNodes = [];
-    const nextLinks = [];
-    const visibleChapterIds = new Set();
+    const nextNodes: ViewNode[] = [];
+    const nextLinks: ViewLink[] = [];
+    const visibleChapterIds = new Set<string>();
 
     books.forEach(book => {
-        const color = bookColorMap.get(book.id);
+        const color = bookColorMap.get(book.id)!;
         const bookKey = `book-${book.id}`;
 
-        if (currentState.expandedBooks.has(book.id)) {
+        if (state.expandedBooks.has(book.id)) {
             const base = prevPositions.get(bookKey);
             const centroid = chapterCentroids.get(book.id);
-            const bx = base?.x ??
-                (centroid ? centroid.x / centroid.count : currentState.dimensions.width / 2);
-            const by = base?.y ??
-                (centroid ? centroid.y / centroid.count : currentState.dimensions.height / 2);
+            const bx =
+                base?.x ??
+                (centroid ? centroid.x / centroid.count : state.dimensions.width / 2);
+            const by =
+                base?.y ??
+                (centroid ? centroid.y / centroid.count : state.dimensions.height / 2);
 
             const bookChapters = chapters.filter(c => c.book_id === book.id);
             bookChapters.forEach((c, i) => {
@@ -118,7 +130,7 @@ function buildView(currentState, previousNodes) {
         }
     });
 
-    currentState.graph.edges.forEach(e => {
+    state.graph.edges.forEach(e => {
         const s = `chapter-${e.source}`;
         const t = `chapter-${e.target}`;
         if (visibleChapterIds.has(s) && visibleChapterIds.has(t)) {
@@ -129,7 +141,7 @@ function buildView(currentState, previousNodes) {
     return { nodes: nextNodes, links: nextLinks };
 }
 
-function rebuildGraph(state, simulationRef) {
+export function rebuildGraph(state: CoreState, simulationRef: { current: any }) {
     if (!state.graph) return;
 
     const view = buildView(state, state.nodes);
@@ -142,9 +154,9 @@ function rebuildGraph(state, simulationRef) {
         .force(
             "link",
             d3.forceLink(state.links)
-                .id(d => d.id)
-                .strength(d => Math.min(0.2, d.score))
-                .distance(d => 20 + (1 - d.score) * 60),
+                .id((d: ViewNode) => d.id)
+                .strength((d: ViewLink) => Math.min(0.2, d.score))
+                .distance((d: ViewLink) => 20 + (1 - d.score) * 60),
         )
         .force("charge", d3.forceManyBody().strength(-30))
         .force(
@@ -153,7 +165,7 @@ function rebuildGraph(state, simulationRef) {
         );
 }
 
-function draw(state, ctx) {
+export function draw(state: CoreState, ctx: CanvasRenderingContext2D | null) {
     if (!ctx) return;
     const { nodes, links, transform, hoveredNode, dimensions } = state;
     const t = transform;
@@ -212,10 +224,3 @@ function draw(state, ctx) {
 
     ctx.restore();
 }
-
-export {
-    buildView,
-    rebuildGraph,
-    draw,
-    findNodeAtPosition,
-};

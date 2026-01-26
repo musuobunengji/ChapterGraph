@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 .vscode
 output
+frontend/graph-core-dist
+frontend/node_modules

@@ -1,0 +1,11 @@
+{
+  "name": "chaptergraph-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:core": "esbuild graph-core/buildView.ts graph-core/reducer.ts --format=esm --outdir=graph-core-dist --target=es2020"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.2"
+  }
+}
