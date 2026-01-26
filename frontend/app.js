@@ -1,12 +1,12 @@
-import React, { useEffect, useRef, useState } from "https://esm.sh/react@18.2.0";
+import React, { useEffect, useReducer, useRef, useState } from "https://esm.sh/react@18.2.0";
 import ReactDOM from "https://esm.sh/react-dom@18.2.0/client";
 import {
-    ActionTypes,
-    reducer,
     rebuildGraph,
     draw,
     findNodeAtPosition,
-} from "./graph.js";
+} from "./graph-core/buildView.js";
+import { ActionTypes } from "./graph-core/types.js";
+import { reducer as coreReducer } from "./graph-core/reducer.js";
 
 const API = "http://127.0.0.1:8000";
 
@@ -20,40 +20,39 @@ function createInitialState() {
         hoveredNode: null,
         dimensions: { width: window.innerWidth, height: window.innerHeight },
         theme: "light",
+        uiPhase: "idle",
     };
 }
 
 function App() {
     const [runs, setRuns] = useState([]);
     const [selectedRun, setSelectedRun] = useState("");
-    const [state, setState] = useState(createInitialState);
+    const [state, dispatch] = useReducer(
+        (currentState, action) => {
+            const partial = coreReducer(currentState, action);
+            return { ...currentState, ...partial };
+        },
+        null,
+        createInitialState,
+    );
     const stateRef = useRef(state);
     const simulationRef = useRef(null);
     const canvasRef = useRef(null);
     const tooltipRef = useRef(null);
 
-    stateRef.current = state;
-
-    const dispatch = (action) => {
-        const partial = reducer(stateRef.current, action);
-        const next = { ...stateRef.current, ...partial };
-        stateRef.current = next;
-        setState(next);
-
-        if (action.type === ActionTypes.SET_GRAPH || action.type === ActionTypes.TOGGLE_BOOK) {
-            rebuildGraph(stateRef.current, simulationRef);
-            setState({ ...stateRef.current });
-        }
-        if (action.type === ActionTypes.RESIZE) {
-            rebuildGraph(stateRef.current, simulationRef);
-            setState({ ...stateRef.current });
-        }
-    };
+    useEffect(() => {
+        stateRef.current = state;
+    }, [state]);
 
     useEffect(() => {
         document.documentElement.dataset.theme =
             state.theme === "dark" ? "dark" : "light";
     }, [state.theme]);
+
+    useEffect(() => {
+        if (!state.graph) return;
+        rebuildGraph(state, simulationRef);
+    }, [state.graph, state.expandedBooks, state.dimensions]);
 
     useEffect(() => {
         const handleResize = () => {
@@ -86,10 +85,14 @@ function App() {
 
     useEffect(() => {
         if (!selectedRun) return;
+        dispatch({ type: ActionTypes.LOAD_GRAPH_START });
         fetch(`${API}/graph?run_id=${selectedRun}`)
             .then((res) => res.json())
             .then((data) => {
-                dispatch({ type: ActionTypes.SET_GRAPH, payload: { graph: data } });
+                dispatch({
+                    type: ActionTypes.LOAD_GRAPH_SUCCESS,
+                    payload: { graph: data },
+                });
             })
             .catch(console.error);
     }, [selectedRun]);

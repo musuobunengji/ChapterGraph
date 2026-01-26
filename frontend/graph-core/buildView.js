@@ -1,52 +1,4 @@
-// ========================
-// Graph helpers (no React)
-// ========================
 const BOOK_COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6"];
-
-const ActionTypes = {
-    SET_GRAPH: "SET_GRAPH",
-    TOGGLE_BOOK: "TOGGLE_BOOK",
-    SET_HOVERED_NODE: "SET_HOVERED_NODE",
-    SET_TRANSFORM: "SET_TRANSFORM",
-    SET_THEME: "SET_THEME",
-    RESIZE: "RESIZE",
-};
-
-function reducer(currentState, action) {
-    switch (action.type) {
-        case ActionTypes.SET_GRAPH: {
-            return {
-                graph: action.payload.graph,
-                expandedBooks: new Set(),
-            };
-        }
-        case ActionTypes.TOGGLE_BOOK: {
-            const bookId = action.payload.bookId;
-            const nextExpanded = new Set(currentState.expandedBooks);
-            if (nextExpanded.has(bookId)) {
-                nextExpanded.delete(bookId);
-            } else {
-                nextExpanded.add(bookId);
-            }
-            return { expandedBooks: nextExpanded };
-        }
-        case ActionTypes.SET_HOVERED_NODE: {
-            return { hoveredNode: action.payload.node };
-        }
-        case ActionTypes.SET_TRANSFORM: {
-            return { transform: action.payload.transform };
-        }
-        case ActionTypes.SET_THEME: {
-            return { theme: action.payload.theme };
-        }
-        case ActionTypes.RESIZE: {
-            return { dimensions: action.payload.dimensions };
-        }
-        default:
-            console.warn("Unknown action", action);
-            return {};
-    }
-}
 
 function getBookRadius(node) {
     const count = node.chapterCount ?? 1;
@@ -74,6 +26,10 @@ function buildView(currentState, previousNodes) {
         return { nodes: [], links: [] };
     }
 
+    // invariants:
+    // - every link connects two visible nodes (checked via visibleChapterIds)
+    // - book nodes never appear when expanded (expandedBooks gate)
+    // - node.id is globally unique (book-... vs chapter-...)
     const books = currentState.graph.nodes.filter(n => n.type === "book");
     const chapters = currentState.graph.nodes.filter(n => n.type === "chapter");
 
@@ -258,8 +214,6 @@ function draw(state, ctx) {
 }
 
 export {
-    ActionTypes,
-    reducer,
     buildView,
     rebuildGraph,
     draw,
