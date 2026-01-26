@@ -1,207 +1,122 @@
 # ChapterGraph
 
-**A Retrieval-Backed Knowledge Graph for Technical Documents**
+ChapterGraph builds a retrieval-backed knowledge graph across chapters from multiple technical books, persists it, and serves it via a FastAPI backend. A lightweight frontend renders the graph with D3 on canvas.
 
-ChapterGraph is an end-to-end backend system that builds, persists, and queries semantic relationships between chapters across multiple technical books. The project is designed as a **modular retrieval pipeline** rather than a monolithic ML demo, with clear separation between ingestion, enrichment, candidate generation, similarity scoring, persistence, and API exposure.
+## Current status (as of Jan 2026)
 
-This repository emphasizes **engineering correctness, observability, and extensibility** over premature modeling complexity.
+- Backend: FastAPI + SQLModel
+- Frontend: plain JS UI shell + graph-core in TypeScript (compiled with esbuild)
+- Graph API: `/graph` returns book and chapter nodes plus weighted edges
 
----
+## Key capabilities
 
-## ✨ Core Capabilities
+- Ingestion and enrichment of book content into chapter-level signals
+- Retrieval pipeline (candidate generation + TF-IDF similarity)
+- Graph construction and persistence
+- API for compute + query
+- Canvas-based graph visualization (expand/collapse clusters)
 
-* **Document Ingestion**
-  Parse structured book content into normalized JSON representations.
+## Project structure (high level)
 
-* **Signal Enrichment**
-  Derive chapter-level textual signals (e.g. `chapter_text`) used as inputs to retrieval models.
-
-* **Multi-Stage Retrieval Pipeline**
-
-  * Candidate generation (pruning search space)
-  * Similarity scoring (TF-IDF–based ranking)
-  * Thresholding / filtering
-
-* **Graph Construction**
-  Generate directed, weighted edges between chapters representing semantic relatedness.
-
-* **Persistent Storage (PostgreSQL)**
-  Store books, chapters, and edges as first-class relational entities.
-
-* **Retrieval-Backed API (FastAPI)**
-  Expose compute and query endpoints backed by a real database.
-
----
-
-## 🧠 Design Philosophy
-
-### 1. Funnel-Based Retrieval (Classical IR)
-
-The system follows a classical **funnel architecture**:
-
-1. **Candidate Generation** – fast, coarse pruning (avoid full pairwise comparison)
-2. **Similarity Scoring** – more expensive ranking (TF-IDF)
-3. **Filtering** – score threshold / top-k
-4. **Persistence** – store results for downstream use
-
-This mirrors production-grade search and recommendation systems.
-
-### 2. Interface-First, OO Design
-
-Key components are defined via interfaces, enabling future extension without refactoring:
-
-* Candidate generators (rule-based, TF-IDF token–based, etc.)
-* Similarity scorers (TF-IDF today, embeddings tomorrow)
-* Retrieval pipeline orchestrator
-
-### 3. Deliberate Model Choice
-
-TF-IDF is used intentionally as the **first semantic baseline**:
-
-* Deterministic
-* Debuggable
-* Interpretable
-
-Embedding-based similarity is treated as a **future drop-in replacement**, not a prerequisite.
-
----
-
-## 🗂 Project Structure
-
-```text
+```
 feature_achievement/
-├── ingestion/              # Parse raw book content → structured JSON
-│   └── ...
-│
-├── enrichment/             # Derive chapter-level signals (chapter_text, etc.)
-│   └── ...
-│
-├── retrieval/
-│   ├── candidates/         # Candidate generation strategies
-│   │   ├── base.py
-│   │   └── tfidf_token.py
-│   │
-│   ├── similarity/         # Similarity scoring strategies
-│   │   ├── base.py
-│   │   └── tfidf.py
-│   │
-│   ├── pipeline.py         # RetrievalPipeline orchestrator
-│   └── edge_generation.py  # Convert retrieval output → graph edges
-│
-├── db/
-│   ├── models.py           # Book / Chapter / Edge (SQLModel)
-│   ├── db.py               # Engine, session, init_db
-│   └── crud.py             # Persistence helpers
-│
-├── api/
-│   ├── main.py             # FastAPI app
-│   ├── deps.py             # Dependency wiring
-│   └── routers/
-│       └── edges.py        # Compute + query edges
-│
-├── scripts/
-│   └── init_db.py          # Initialize database schema
-│
-└── pipeline.py             # Script-style pipeline entry (non-API)
+  api/
+    main.py
+    routers/edges.py
+  db/
+    models.py
+    crud.py
+  retrieval/
+    candidates/
+    similarity/
+    pipeline.py
+  scripts/
+    init_db.py
+
+frontend/
+  index.html
+  app.js
+  graph-core/
+    buildView.ts
+    reducer.ts
+    types.ts
+  graph-core-dist/   # compiled JS output
+  package.json
 ```
 
----
+## Backend: run
 
-## 🗄 Database Schema (PostgreSQL)
-
-### Book
-
-* `id` (PK)
-* `title`
-* `created_at`
-
-### Chapter
-
-* `id` (PK)
-* `book_id` (indexed)
-* `chapter_text`
-* `created_at`
-
-### Edge
-
-* `id` (PK)
-* `from_chapter` (indexed)
-* `to_chapter` (indexed)
-* `score`
-* `type` (e.g. `tfidf`)
-* `created_at`
-
-The schema enforces a **node-before-edge** persistence model, mirroring graph system best practices.
-
----
-
-## 🚀 Running the Project
-
-### 1️⃣ Initialize Database
-
-```bash
-python -m feature_achievement.scripts.init_db
-```
-
-### 2️⃣ Start API Server
+Start the API server (default port 8000):
 
 ```bash
 uvicorn feature_achievement.api.main:app --reload
 ```
 
-Open Swagger UI:
+Swagger UI:
 
 ```
 http://127.0.0.1:8000/docs
 ```
 
----
+If you need to initialize the DB schema (first time only):
 
-## 🔌 API Endpoints
+```bash
+python -m feature_achievement.scripts.init_db
+```
 
-### `POST /compute-edges`
+## Frontend: build + run
 
-* Runs retrieval pipeline
-* Persists books, chapters, and edges
-* Designed for batch / MQ-style execution
+The UI shell stays in JS. The graph-core is TypeScript and compiled with esbuild.
 
-### `GET /edges?book_id=...`
+```bash
+cd frontend
+npm i -D esbuild
+npm run build:core
+python -m http.server 5500
+```
 
-* Query all edges associated with a given book
-* Returns both incoming and outgoing relationships
+Open:
 
----
+```
+http://127.0.0.1:5500/index.html
+```
 
-## 🧪 Observability & Debugging
+Optional API base override:
 
-The pipeline is intentionally designed to allow inspection at every stage:
+```
+http://127.0.0.1:5500/index.html?api=http://127.0.0.1:8000
+```
 
-* Raw chapter text
-* TF-IDF vectors
-* Top-N similar chapters
-* Persisted edges
+## API endpoints
 
-This makes semantic errors diagnosable **before** introducing black-box models.
+- POST `/compute-edges`  
+  Runs retrieval pipeline and persists nodes/edges for a new run.
 
----
+- GET `/runs`  
+  List runs (latest first).
 
-## 🔮 Future Extensions
+- GET `/graph?run_id=...`  
+  Returns graph nodes + edges for a run.
 
-* Embedding-based similarity (drop-in replacement)
-* Asynchronous retrieval jobs (MQ / worker)
-* Edge pagination & filtering
-* Graph visualization (D3 / WebGL)
-* Vector database integration
+- GET `/edges?book_id=...`  
+  Query edges for a given book.
 
----
+## Graph response shape (simplified)
 
-## 📌 Summary
+```json
+{
+  "nodes": [
+    { "id": "book-id", "type": "book", "size": 18 },
+    { "id": "book-id::ch1", "type": "chapter", "book_id": "book-id", "title": "Intro" }
+  ],
+  "edges": [
+    { "source": "book-id::ch1", "target": "other::ch2", "score": 0.42, "type": "tfidf" }
+  ]
+}
+```
 
-ChapterGraph is not a demo of a single model, but a **retrieval system**:
+## Notes
 
-* Modular
-* Inspectable
-* Persisted
-* API-backed
-
-It is designed to scale in both **data volume** and **model sophistication** without architectural rewrites.
+- The graph UI supports expand/collapse of book clusters (double-click).
+- Chapter titles are provided by the backend (`/graph`) and shown in tooltips.
+- If you edit `graph-core/*.ts`, re-run `npm run build:core`.

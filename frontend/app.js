@@ -7,7 +7,9 @@ import {
 } from "./graph-core-dist/buildView.js";
 import { reducer as coreReducer } from "./graph-core-dist/reducer.js";
 
-const API = "http://127.0.0.1:8000";
+const API =
+    new URLSearchParams(window.location.search).get("api") ??
+    "http://127.0.0.1:8000";
 
 function createInitialState() {
     return {

@@ -1,7 +1,9 @@
-from typing import List
+from typing import List, Literal, Optional
 import json
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlmodel import select, Session
 
 # from feature_achievement.api.deps import (
@@ -31,6 +33,34 @@ from feature_achievement.retrieval.utils.tfidf import (
 )
 
 router = APIRouter(prefix="", tags=["edges"])
+
+
+class GraphNode(BaseModel):
+    id: str
+    type: Literal["book", "chapter"]
+    size: Optional[int] = None
+    book_id: Optional[str] = None
+    title: Optional[str] = None
+
+
+class GraphEdge(BaseModel):
+    source: str
+    target: str
+    score: float
+    type: str
+
+
+class GraphResponse(BaseModel):
+    nodes: List[GraphNode]
+    edges: List[GraphEdge]
+
+
+class RunResponse(BaseModel):
+    id: int
+    book_ids: List[str]
+    candidate_generator: str
+    similarity: str
+    created_at: datetime
 
 
 @router.post("/compute-edges")
@@ -121,7 +151,7 @@ def list_edges(
     }
 
 
-@router.get("/graph")
+@router.get("/graph", response_model=GraphResponse)
 def get_graph(
     run_id: int,
     session: Session = Depends(get_session),
@@ -172,7 +202,7 @@ def get_graph(
     return frontend
 
 
-@router.get("/runs")
+@router.get("/runs", response_model=List[RunResponse])
 def list_runs(session: Session = Depends(get_session)):
     runs = session.exec(select(Run).order_by(Run.created_at.desc())).all()
     return [
