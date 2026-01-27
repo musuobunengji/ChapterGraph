@@ -1,20 +1,17 @@
 # ChapterGraph
 
-ChapterGraph builds a retrieval-backed knowledge graph across chapters from multiple technical books, persists it, and serves it via a FastAPI backend. A lightweight frontend renders the graph with D3 on canvas.
+ChapterGraph builds a retrieval-backed knowledge graph across chapters from multiple technical books, persists it in PostgreSQL, and serves it via a FastAPI backend. A lightweight frontend renders the graph on a canvas with D3, supporting expand/collapse of book clusters.
 
-## Current status (as of Jan 2026)
+---
 
-- Backend: FastAPI + SQLModel
-- Frontend: plain JS UI shell + graph-core in TypeScript (compiled with esbuild)
-- Graph API: `/graph` returns book and chapter nodes plus weighted edges
+## Current status (Jan 2026)
 
-## Key capabilities
+- Backend: FastAPI + SQLModel + PostgreSQL
+- Retrieval: TF‑IDF similarity (default) + optional sentence‑transformers embeddings
+- Frontend: JS UI shell + TypeScript graph‑core (compiled with esbuild)
+- Graph API: `/graph` returns book + chapter nodes with weighted edges
 
-- Ingestion and enrichment of book content into chapter-level signals
-- Retrieval pipeline (candidate generation + TF-IDF similarity)
-- Graph construction and persistence
-- API for compute + query
-- Canvas-based graph visualization (expand/collapse clusters)
+---
 
 ## Project structure (high level)
 
@@ -23,15 +20,23 @@ feature_achievement/
   api/
     main.py
     routers/edges.py
+    routers/compute_edges_request.py
   db/
+    engine.py
     models.py
     crud.py
   retrieval/
     candidates/
     similarity/
+      tfidf.py
+      embedding.py
+    utils/
+      tfidf.py
+      embedding.py
     pipeline.py
   scripts/
     init_db.py
+    evaluate_retrieval.py
 
 frontend/
   index.html
@@ -40,9 +45,14 @@ frontend/
     buildView.ts
     reducer.ts
     types.ts
-  graph-core-dist/   # compiled JS output
+  graph-core-dist/
   package.json
+
+scripts/
+  run_local.ps1
 ```
+
+---
 
 ## Backend: run
 
@@ -58,15 +68,17 @@ Swagger UI:
 http://127.0.0.1:8000/docs
 ```
 
-If you need to initialize the DB schema (first time only):
+Initialize DB schema (first time only):
 
 ```bash
 python -m feature_achievement.scripts.init_db
 ```
 
+---
+
 ## Frontend: build + run
 
-The UI shell stays in JS. The graph-core is TypeScript and compiled with esbuild.
+The UI shell stays in JS. The graph‑core is TypeScript and compiled with esbuild.
 
 ```bash
 cd frontend
@@ -87,10 +99,12 @@ Optional API base override:
 http://127.0.0.1:5500/index.html?api=http://127.0.0.1:8000
 ```
 
+---
+
 ## API endpoints
 
 - POST `/compute-edges`  
-  Runs retrieval pipeline and persists nodes/edges for a new run.
+  Runs the retrieval pipeline and persists nodes/edges for a new run.
 
 - GET `/runs`  
   List runs (latest first).
@@ -100,6 +114,8 @@ http://127.0.0.1:5500/index.html?api=http://127.0.0.1:8000
 
 - GET `/edges?book_id=...`  
   Query edges for a given book.
+
+---
 
 ## Graph response shape (simplified)
 
@@ -115,8 +131,50 @@ http://127.0.0.1:5500/index.html?api=http://127.0.0.1:8000
 }
 ```
 
+---
+
+## Embedding scorer (optional)
+
+Install sentence‑transformers:
+
+```bash
+pip install sentence-transformers
+```
+
+Use embedding similarity in `/compute-edges`:
+
+```json
+{
+  "book_ids": ["spring-in-action", "spring-start-here", "springboot-in-action"],
+  "candidate_generator": "tfidf_token",
+  "similarity": "embedding",
+  "embedding_model": "all-MiniLM-L6-v2",
+  "min_score": 0.1
+}
+```
+
+---
+
+## Retrieval evaluation (score statistics)
+
+This script summarizes score distribution (overall + top‑k per source). It is **not** a ground‑truth hit‑rate metric.
+
+```bash
+python -m feature_achievement.scripts.evaluate_retrieval --run-id 3 --top-k 5
+```
+
+---
+
+## One‑click local run (PowerShell)
+
+```powershell
+.\scripts\run_local.ps1
+```
+
+---
+
 ## Notes
 
-- The graph UI supports expand/collapse of book clusters (double-click).
-- Chapter titles are provided by the backend (`/graph`) and shown in tooltips.
-- If you edit `graph-core/*.ts`, re-run `npm run build:core`.
+- Double‑click a book node to expand/collapse its chapters.
+- Chapter titles come from `/graph` and are shown in tooltips.
+- If you edit `graph-core/*.ts`, re‑run `npm run build:core`.

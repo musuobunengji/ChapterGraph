@@ -7,6 +7,7 @@ class ComputeEdgesRequest(BaseModel):
     enrichment_version: str = "v1_bullets+sections"
 
     candidate_generator: str = "tfidf_token"
-    similarity: str = "tfidf"
+    similarity: str = "tfidf/embedding"
+    embedding_model: str = "all-MiniLM-L6-v2"
 
     min_score: float = 0.1

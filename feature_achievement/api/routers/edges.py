@@ -21,6 +21,7 @@ from feature_achievement.retrieval.candidates.tfidf_token import (
     TfidfTokenCandidateGenerator,
 )
 from feature_achievement.retrieval.similarity.tfidf import TfidfSimilarityScorer
+from feature_achievement.retrieval.similarity.embedding import EmbeddingSimilarityScorer
 from feature_achievement.retrieval.pipeline import RetrievalPipeline
 from feature_achievement.retrieval.edge_generation import generate_edges
 
@@ -31,6 +32,7 @@ from feature_achievement.retrieval.utils.tfidf import (
     extract_top_tfidf_tokens,
     build_token_index,
 )
+from feature_achievement.retrieval.utils.embedding import build_embedding_index
 
 router = APIRouter(prefix="", tags=["edges"])
 
@@ -105,7 +107,14 @@ def compute_edges(
     )
 
     # 5️⃣ assemble similarity scorer
-    similarity_scorer = TfidfSimilarityScorer(tfidf_index)
+    if req.similarity == "embedding":
+        embedding_index = build_embedding_index(
+            chapter_texts,
+            model_name=req.embedding_model,
+        )
+        similarity_scorer = EmbeddingSimilarityScorer(embedding_index)
+    else:
+        similarity_scorer = TfidfSimilarityScorer(tfidf_index)
 
     # 6️⃣ assemble retrieval pipeline
     retrieval_pipeline = RetrievalPipeline(
